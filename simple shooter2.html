@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>tutorial simple shooter game 2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Loading Bootstrap -->
+    <link href="css/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Loading Flat UI -->
+    <link href="css/flat-ui.min.css" rel="stylesheet">
+
+    <link rel="shortcut icon" href="img/favicon.ico">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/vendor/html5shiv.js"></script>
+      <script src="js/vendor/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+        <h1>yoel html5 2d game engine programming tut a simple shooter game</h1>
+		<h2>part2 enemy movement and shooting</h2>
+		<hr>
+		<div class="row">
+			<div class="tile  palette palette-peter-river">
+				<p>
+				in this tutorial we will program enemy behaviour. we will create to types<br>
+				of enemys ,minion and warrior, the minion moves straight to hit the player ,<br>
+				the warrior homes on the player and shots him. two different behaviours.<br>
+				in the next tutrial we will handle collision detection and the game manger.
+			    </p>
+			</div>
+			<div class="ypart1">
+				<p>
+				</p>
+				
+				<p>
+				the finished project is in file finished project called part 2.html.
+				</p>
+				
+				<p>
+				</p>
+				<p>
+					first thing we will add css cass for the enemy types.
+					
+					
+				</p>
+				<pre><code class="css">
+				.minion{background:red;}
+				.warrior{background:magenta;}
+
+				</code></pre>
+			</div><!--end ypart1-->
+			<div class="ypart2">
+				<p>
+				minion background will be red,warrior will be magenta.<br>
+				</p>
+			
+				<pre><code class="js">
+				 ////////  enemy////////
+				var enemy = function(x,y,z,mesh)
+				{ 
+				 this.did_init = false;
+				 this.type = 'enemy'; 
+				 this.enemy_type = "minion";
+				 this.hp =1;
+				 //delay between shots timer
+				 this.delay_timer =  new y_timer(1.7);
+				 y_entity.call(this,x,y,z,1,mesh); 
+
+				} 	
+				</code></pre>
+				<p>
+				in the constructor we have enemy_type att,its so we can distinguish between specific<br>
+				enemy types. hp is the enemies health points,we will use it in next tutorial.<br>
+				we also have a shot delay timer for the warrior enemy type.<br>
+				now we move on to init method:
+				</p>
+	
+				<pre><code class="js">
+				 enemy_p.init = function()
+				{
+
+					if(!this.did_init)
+					{
+						if(this.enemy_type == "minion")
+						{
+							$("#"+this.id).addClass("minion");
+						}
+						if(this.enemy_type == "warrior")
+						{
+							$("#"+this.id).addClass("warrior");
+						}
+						this.did_init = true;
+						return;
+					}//if did init escape 
+
+				}//end init 
+				</code></pre>
+				
+				<p>
+				all we did here is to add the enemy_type to the dom element class using jquery.<br>
+				so the css rules for that class will affect it.<br>
+				now we will add a move method:
+				</p>
+				
+	
+				<pre><code class="js">
+				enemy_p.move = function()
+				{
+					//get player
+					var player = y_entity_p.get_by_type.call(this,"player")[0];
+					
+					//minion and warrior moves down always
+					
+					y_entity_p.move_by.call(this,0,this.speed);
+					
+			
+				}//end move
+				</code></pre>
+				
+				
+				<p>
+				first we called the player object using get_by_type method,it returns an array<br>
+				so i called the first object in the array using [0] (if you dont know this search for tutorials<br>
+				for basic js). thers 1 player so it will always be the first and only object in that array.<br>
+				all the enemies move down so i used move by method to move the enemy by speed on the y axis.<br>
+				now we will add the warriors movement behaviour. the warrior tries to align itself with the player<br>
+				on the x axis so it can shot the player more accurately.
+				</p>
+						
+				<pre><code class="js">
+				enemy_p.move = function()
+				{
+					//get player
+					var player = y_entity_p.get_by_type.call(this,"player")[0];
+					
+					//minion and warrior moves down always
+					
+					y_entity_p.move_by.call(this,0,this.speed);
+					<span class=" palette-alizarin" >
+					//warrior homes on player
+					if(this.enemy_type == "warrior")
+					{
+						//if x is bigger then the players x move left
+						if(this.x>player.x)
+						{
+							y_entity_p.move_by.call(this,-this.speed,0);
+						}
+						//if x is smaller then the players x move right
+						if(this.x<player.x)
+						{
+							y_entity_p.move_by.call(this,this.speed,0);
+						}
+					}
+					</span>
+				}//end move
+				</code></pre>
+				<p>
+				first we check if its warrior, then we chack if x is bigger then the players x move left<br>
+				and move the entity accordingly.<br>
+				now we will check if y is lower then game screen if it is remove enemy from the game world.
+				</p>
+				
+				<pre><code class="js">
+				enemy_p.move = function()
+				{
+					//get player
+					var player = y_entity_p.get_by_type.call(this,"player")[0];
+					
+					//minion and warrior moves down always
+					
+					y_entity_p.move_by.call(this,0,this.speed);
+					
+					//warrior homes on player
+					if(this.enemy_type == "warrior")
+					{
+						//if x is bigger then the players x move left
+						if(this.x>player.x)
+						{
+							y_entity_p.move_by.call(this,-this.speed,0);
+						}
+						//if x is smaller then the players x move right
+						if(this.x<player.x)
+						{
+							y_entity_p.move_by.call(this,this.speed,0);
+						}
+					}
+					<span class=" palette-alizarin" >
+					//if its outside of screen remove it
+					if(this.y>480)
+					{
+						yremove(this,this);
+					}
+					</span >
+				}//end move
+				</code></pre>
+				<p>
+				now we will handle enemy shooting,only warrior can shoot.
+				</p>
+				
+				<pre><code class="js">
+				enemy_p.shoot = function()
+				{
+					//if its not warrior type dont shot
+					if(this.enemy_type != "warrior"){return;}
+		
+				}//end collide
+				</code></pre>
+				<p>
+				the enemy will shot when the timer is finished,its almost the same code<br>
+				as the player shoot method just without keyboard control, and i changed the speed and dir<br>
+				of the bullet.
+				</p>
+				<pre><code class="js">
+			
+				enemy_p.shoot = function()
+				{
+					//if its not warrior type dont shot
+					if(this.enemy_type != "warrior"){return;}
+					//update delay timer
+					this.delay_timer.update();
+					
+					//if delay timer finished shoot
+					if( this.delay_timer.finished)
+					{
+						//create bullet with dir update
+						var b = new bullet(this.x+10,this.y+10,1,this.dmg,this.type);
+						//make enemy bullet shot slower
+						<span class=" palette-alizarin" >
+						b.speed=3;
+						b.dir="down";
+						</span >
+						//add to world
+						yoel_engine_p.current_world.add(b);
+						
+						//reset timer
+						this.delay_timer.reset();
+					}
+				}//end shoot
+				</code></pre>
+				<p>
+				thats it for this tut in the next we will show how to handle collision(between player and bullet,player and enemy,enemy with bullet).
+				</p>
+				</div><!--end ypart2-->
+			<div class="ypart3"></div><!--end ypart3-->
+			<div class="ypart4"></div><!--end ypart4-->
+		</div>
+	
+    </div>
+    <!-- /.container -->
+	
+    <!-- script higlighter -->
+	
+
+    <!-- jQuery (necessary for Flat UI's JavaScript plugins) -->
+    <script src="js/vendor/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/vendor/video.js"></script>
+    <script src="js/flat-ui.min.js"></script>
+	<script>
+	///scroll to div when link is clicked
+	$( document ).ready(function() {
+	    $("yscroll").on('click', function(e) {
+
+			// prevent default anchor click behavior
+		   e.preventDefault();
+
+		   // animate
+		   $('html, body').animate({
+			   scrollTop: $(this.hash).offset().top
+			 }, 300, function(){
+	   
+			   // when done, add hash to url
+			   // (default click behaviour)
+			   window.location.hash = this.hash;
+			 });
+
+		});
+	});
+	</script>
+
+  </body>
+</html>

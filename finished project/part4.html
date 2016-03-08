@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+
+
+	<title>game design</title>
+
+ 	
+
+	<style>
+	
+		#y_game
+		{
+			position:relative;
+			background: #000 none repeat scroll 0 0;
+			overflow:hidden;
+			width:300px;
+		    height:500px;
+			
+		    color:white;
+			font-size:2em;
+			
+		    border:10px solid #333;
+		    margin:30px auto;
+		    box-shadow:5px 5px 10px #444;
+			transform-style: preserve-3d;
+			
+			
+		}
+	
+		.entity
+		{
+			position:absolute;
+			background:blue;
+			height:50px;
+			width:50px;
+			-webkit-transform-style: preserve-3d;
+			backface-visibility: hidden;
+			-webkit-transform: translate3d(0,0,0); 
+			transform: rotate(0deg);
+			-moz-transform:  rotate(0deg);
+			
+			
+		}
+		.hitbox
+		{
+			position:absolute;
+			border:solid 1px red;
+		}
+		.minion{background:red;}
+		.warrior{background:magenta;}
+	
+	</style>
+</head> 
+ 
+<body> 
+
+	<div id="y_game"></div>
+
+	
+	<script src="js/jquery-1.7.1.min.js"></script>
+	<script src="js/yoel_dom_game.js"></script>
+	
+	<script>
+	//game main
+	function main()
+	{
+		var test_world = new y_world("y_game");
+		yoel_engine_p.current_world = test_world;
+		yoel_engine_p.init();
+		
+		
+		//create example entity
+		var test_p = new player(100,400,0,3);
+		//create test minion
+		var test_m = new enemy(30,-20,0);
+		//create test warrior
+		var test_w = new enemy(80,-20,0);
+		test_w.enemy_type="warrior";
+		
+		//add game manger
+		var gm = new game_manger();
+	
+	    //add it to world	
+        yoel_engine_p.current_world.add(test_p);
+        yoel_engine_p.current_world.add(test_m);
+        yoel_engine_p.current_world.add(test_w);
+        yoel_engine_p.current_world.add(gm);
+
+	
+
+
+	
+	}
+
+
+ ////////  player////////
+var player = function(x,y,z,speed,mesh)
+{ 
+	 this.did_init = false;
+	 this.type = 'player'; 
+
+	 y_entity.call(this,x,y,z,speed,mesh); 
+	 this.is_key_control = true;
+	 //player bullet damage
+	 this.dmg = 1;
+	 //player health points
+	 this.hp = 3;
+	 
+	 //delay between shots timer
+	 this.delay_timer =  new y_timer(0.5);
+	 //dont show collision box
+	 this.collision_show =false;
+
+} 
+ 
+ player.prototype= new y_entity(); 
+ 
+ var player_p = player.prototype; 
+ 
+ player_p.init = function()
+{
+
+ if(this.did_init){return;}//if did init escape 
+
+ }//end init 
+
+ player_p.update = function()
+{
+	 this.init();
+	 this.restrict_movement();
+	 this.shoot();
+	 this.collide();
+	 this.check_hp();
+	 y_entity_p.update.call(this); 
+
+ }//end update 
+
+
+player_p.restrict_movement = function()
+{
+	if(this.x<0){this.x=0;}
+	if(this.x>250){this.x=250;}
+	if(this.y<0){this.y=0;}
+	if(this.y>430){this.y=430;}
+}//end move
+
+player_p.shoot = function()
+{
+	//update delay timer
+	this.delay_timer.update();
+	
+	//if space is pressed and delay timer finished
+	if(y_input2_p.key_down[y_key.SPACE] && this.delay_timer.finished)
+	{
+		//create bullet 
+		var b = new bullet(this.x+10,this.y+10,1,this.dmg,this.type);
+		//add to world
+		yoel_engine_p.current_world.add(b);
+		
+		//reset timer
+		this.delay_timer.reset();
+	}
+}//end shoot
+
+player_p.collide = function()
+{
+	//collide enemy
+	hit_e = y_entity_p.colide.call(this,"enemy");
+
+	
+	//collide bullet
+	hit_b = y_entity_p.colide.call(this,"bullet");
+
+	if(hit_b && hit_b.shooter_type =="enemy")
+	{
+		//reduce hp
+		this.hp-= hit_b.dmg;
+		// bullet from world
+		yremove(this,hit_b);		
+	}
+	
+	if(hit_e)
+	{
+		//reduce hp
+		this.hp--;
+		//remove enemy world
+		yremove(this,hit_e);
+	}
+}//end collide
+
+player_p.check_hp = function()
+{
+	//if hp is less or equal to 0 remove entity
+	if(this.hp <= 0)
+	{
+		yremove(this,this);
+	}
+	
+}//end check_hp
+ //////// end player////////
+
+ 
+ ////////  enemy////////
+var enemy = function(x,y,z,mesh)
+{ 
+	 this.did_init = false;
+	 this.type = 'enemy'; 
+	 this.enemy_type = "minion";
+	 this.hp =1;
+	 this.dmg =1;
+	 //delay between shots timer
+	 this.delay_timer =  new y_timer(1.7);
+	 y_entity.call(this,x,y,z,1,mesh); 
+	 //dont show collision box
+	 this.collision_show =false;
+} 
+ 
+ enemy.prototype= new y_entity(); 
+ 
+ var enemy_p = enemy.prototype; 
+ 
+ enemy_p.init = function()
+{
+
+	if(!this.did_init)
+	{
+		if(this.enemy_type == "minion")
+		{
+			$("#"+this.id).addClass("minion");
+		}
+		if(this.enemy_type == "warrior")
+		{
+			$("#"+this.id).addClass("warrior");
+			this.hp =2;
+		}
+		this.did_init = true;
+		return;
+	}//if did init escape 
+
+}//end init 
+
+ enemy_p.update = function()
+{
+	this.init();
+	this.move();
+	this.shoot();
+	this.collide();
+	this.check_hp();
+	y_entity_p.update.call(this); 
+
+}//end update 
+
+
+enemy_p.move = function()
+{
+	//get player
+	var player = y_entity_p.get_by_type.call(this,"player")[0];
+	
+	//minion and warrior moves down always
+	
+	y_entity_p.move_by.call(this,0,this.speed);
+	
+	//warrior homes on player
+	if(this.enemy_type == "warrior")
+	{
+		//if x is bigger then the players x move left(add chack if player exists)
+		if(player && this.x>player.x)
+		{
+			y_entity_p.move_by.call(this,-this.speed,0);
+		}
+		//if x is smaller then the players x move right (add chack if player exists)
+		if(player && this.x<player.x)
+		{
+			y_entity_p.move_by.call(this,this.speed,0);
+		}
+	}
+	
+	//if its outside of screen remove it
+	if(this.y>480)
+	{
+		yremove(this,this);
+	}
+}//end move
+
+enemy_p.shoot = function()
+{
+	//if its not warrior type dont shot
+	if(this.enemy_type != "warrior"){return;}
+	//update delay timer
+	this.delay_timer.update();
+	
+	//if delay timer finished shoot
+	if( this.delay_timer.finished)
+	{
+		//create bullet with dir update
+		var b = new bullet(this.x+10,this.y+10,1,this.dmg,this.type);
+		//make enemy bullet shot slower
+		b.speed=3;
+		b.dir="down";
+		//add to world
+		yoel_engine_p.current_world.add(b);
+		
+		//reset timer
+		this.delay_timer.reset();
+	}
+}//end shoot
+
+enemy_p.collide = function()
+{
+	//collide bullet
+	hit_b = y_entity_p.colide.call(this,"bullet");
+	
+	//only player bullets deal dmg
+	if(hit_b && hit_b.shooter_type =="player" )
+	{
+		this.hp-= hit_b.dmg;
+		yremove(this,hit_b);
+	}
+}//end collide
+
+enemy_p.check_hp = function()
+{
+	//reusing player class code
+	player_p.check_hp.call(this); 
+}//end check_hp 
+ //////// end enemy////////
+
+ 
+ ////////  bullet////////
+var bullet = function(x,y,z,dmg,shooter_type)
+{ 
+	 this.did_init = false;
+	 this.type = 'bullet'; 
+	//make speed =5
+	 y_entity.call(this,x,y,z,5); 
+	 //bullet damage(how much damage it dose when it hits)
+	 this.dmg = dmg;
+	 //what entity type shot this? (who shot the bullet)
+	 this.shooter_type = shooter_type;
+	 //bullet movement direction
+	 this.dir = "up";
+	 
+	  
+	 //collision box
+	 this.hitbox_width=20;
+	 this.hitbox_height=20;
+	 //bullet width and hight
+	 this.width = 20;
+	 this.height =20;
+	 yw_h(this,this.width,this.height);
+	
+
+} 
+ 
+ bullet.prototype= new y_entity(); 
+ 
+ var bullet_p = bullet.prototype; 
+ 
+ bullet_p.init = function()
+{
+
+ if(this.did_init){return;}//if did init escape 
+
+ }//end init 
+
+ bullet_p.update = function()
+{
+	 this.init();
+	 this.move();
+	 y_entity_p.update.call(this); 
+
+ }//end update 
+bullet_p.move = function()
+{
+	//if dir = down move by speed on y axis
+	if(this.dir =="down")
+	{
+		y_entity_p.move_by.call(this,0,this.speed);
+	}
+	//if dir = up move by -speed on y axis
+	if(this.dir =="up")
+	{
+		y_entity_p.move_by.call(this,0,-this.speed);
+	}
+	
+	//if its outside of screen remove it
+	if(this.y<0 || this.y>480)
+	{
+		yremove(this,this);
+	}
+}//end move
+	
+
+ //////// end bullet////////
+
+ 
+ ////////  game_manger////////
+var game_manger = function(x,y,z,speed,mesh)
+{ 
+	 this.did_init = false;
+	 this.type = 'game_manger'; 
+
+	 y_entity.call(this,x,y,z,speed,mesh); 
+	 this.score=0;
+	 //spawn timers
+	 this.spawn_timer =  new y_timer(5);
+	 this.spawn_timer2 =  new y_timer(8);
+	 this.spawn_timer3 =  new y_timer(10);
+
+} 
+ 
+ game_manger.prototype= new y_entity(); 
+ 
+ var game_manger_p = game_manger.prototype; 
+ 
+ game_manger_p.init = function()
+{
+
+	if(!this.did_init)
+	{
+		
+		//show score using jqury
+		var id ="#"+yoel_engine_p.current_world.game_wraper;//game container id
+		//create score div
+		$(id).append("<div class='yscore'>score:0</div>");
+		//hide entity dom element
+		$("#"+this.id).hide();
+		this.did_init=true;
+		return;
+	}//if did init escape 
+
+ }//end init 
+
+ game_manger_p.update = function()
+{
+	this.init();
+	this.spawn();
+	this.hud();
+	 y_entity_p.update.call(this); 
+
+ }//end update 
+ 
+game_manger_p.spawn = function()
+{
+	//update timers
+	this.spawn_timer.update();
+	this.spawn_timer2.update();
+	this.spawn_timer3.update();
+	
+	//update score
+	this.score++;
+	
+	//if score is bigger then num and spaun timer is finished do somthing
+	if(this.score>0 && this.spawn_timer.finished)
+	{
+		//add three minions
+		for(var i=0; i<=2; i++)
+		{
+			//create minnion
+			var m = new enemy(100*i,-20,0);
+			 //add it to world	
+			yoel_engine_p.current_world.add(m);
+		}
+		//reset timer
+		this.spawn_timer.reset();
+	}
+	if(this.score>500 && this.spawn_timer2.finished)
+	{
+		//create worrior
+		var w = new enemy(80,-20,0);
+		w.enemy_type="warrior";
+	
+	    //add it to world	
+        yoel_engine_p.current_world.add(w);
+		//reset timer
+		this.spawn_timer2.reset();
+	}
+	if(this.score>1000 && this.spawn_timer3.finished)
+	{
+		//add two warriors
+		for(var i=0; i<=1; i++)
+		{
+			//create warriors
+			var w2 = new enemy(120*i,-40,0);
+			w2.enemy_type="warrior";
+			 //add it to world	
+			yoel_engine_p.current_world.add(w2);
+		}
+		//reset timer
+		this.spawn_timer3.reset();
+	}
+}//end spawn
+
+game_manger_p.hud = function()
+{
+
+	//show score
+	$(".yscore").text("score: "+this.score);//add text to yscore
+	
+}//end hud
+
+ //////// end game_manger////////
+
+
+
+
+	//main
+	main();
+	</script>
+
+</body> 
+</html>

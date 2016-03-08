@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>tutorial simple shooter game 3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Loading Bootstrap -->
+    <link href="css/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Loading Flat UI -->
+    <link href="css/flat-ui.min.css" rel="stylesheet">
+
+    <link rel="shortcut icon" href="img/favicon.ico">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/vendor/html5shiv.js"></script>
+      <script src="js/vendor/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+        <h1>yoel html5 2d game engine programming tut a simple shooter game</h1>
+		<h2>part3 collision detection</h2>
+		<hr>
+		<div class="row">
+			<div class="tile  palette palette-peter-river">
+				<p>
+				in this tutorial we will add collision detection  
+				for bullets and handle health for entitys.<br>
+				</p>
+			</div>
+			<div class="ypart1">
+				<p>
+				</p>
+				
+				<p>
+				the finished project is in file finished project called part 3.html.
+				</p>
+				
+				<p>
+				</p>
+				<p>
+					first thing we will add attributes to our entitys class.
+				</p>
+				<pre><code class="css">
+				 ////////  player////////
+				var player = function(x,y,z,speed,mesh)
+				{ 
+					 this.did_init = false;
+					 this.type = 'player'; 
+
+					 y_entity.call(this,x,y,z,speed,mesh); 
+					 this.is_key_control = true;
+					 //player bullet damage
+					 this.dmg = 1;
+					<span class=" palette-alizarin" >
+					//player health points
+					 this.hp = 3;
+					</span>
+					 //delay between shots timer
+					 this.delay_timer =  new y_timer(0.5);
+					 <span class=" palette-alizarin" >
+					 //dont show collision box
+					 this.collision_show =false;
+					 </span>
+
+				} 
+
+				</code></pre>
+			</div><!--end ypart1-->
+			<div class="ypart2">
+				<p>
+				we add player hp, later we will check if its below 0.<br>
+				we changed collision_show to false, i dont need to see collision boxes for now.<br>
+				now we will change enemys atts.
+				</p>
+			
+				<pre><code class="js">
+				 ////////  enemy////////
+				var enemy = function(x,y,z,mesh)
+				{ 
+					 this.did_init = false;
+					 this.type = 'enemy'; 
+					 this.enemy_type = "minion";
+					 this.hp =1;
+					 <span class=" palette-alizarin" >
+					 this.dmg =1;
+					 </span>
+					 
+					 //delay between shots timer
+					 this.delay_timer =  new y_timer(1.7);
+					 y_entity.call(this,x,y,z,1,mesh); 
+					 <span class=" palette-alizarin" >
+					 //dont show collision box
+					 this.collision_show =false;
+					 </span>
+				} 	
+				</code></pre>
+				<p>
+				we will use dmg attribute and pass it to bullets created by enemy.<br>
+				also here we dont need the collision box to show.<br>
+				in enemys init i changed warrior hp to 2.
+				
+				</p>
+	
+				<pre><code class="js">
+				 enemy_p.init = function()
+				{
+
+					if(!this.did_init)
+					{
+						if(this.enemy_type == "minion")
+						{
+							$("#"+this.id).addClass("minion");
+						}
+						if(this.enemy_type == "warrior")
+						{
+							$("#"+this.id).addClass("warrior");
+							<span class=" palette-alizarin" >
+							this.hp =2;
+							</span>
+						}
+						this.did_init = true;
+						return;
+					}//if did init escape 
+
+				}//end init 
+				</code></pre>
+				
+				<p>
+				we will add a new method to enemy called collide, to handle bullet collition with enemy.
+				</p>
+				
+	
+				<pre><code class="js">
+				enemy_p.collide = function()
+				{
+					//collide bullet
+					hit_b = y_entity_p.colide.call(this,"bullet");
+					
+					//only player bullets deal dmg
+					if(hit_b && hit_b.shooter_type =="player" )
+					{
+						this.hp-= hit_b.dmg;
+						yremove(this,hit_b);
+					}
+				}//end collide
+
+				</code></pre>
+				
+				
+				<p>
+				first we chack for collision with bullet object using colide.<br>
+				if it returns a bullet entity and the one that shot the bullet is player using<br>
+				bullets att shooter_type, we dont want friendly fire,if we didnt chack who shot the<br>
+				bullet it will deal demege  regardless of who shot it.<br>
+				inside the if we reduce hp by the bullets dmg att. and remove bullet from game world.<br>
+				i covered collision and entity remove in a previous tutorial.<br>
+				now we will handle collision for player entity.
+				
+				</p>
+						
+				<pre><code class="js">
+				player_p.collide = function()
+				{
+					<span class=" palette-alizarin" >
+					//collide enemy
+					hit_e = y_entity_p.colide.call(this,"enemy");
+					</span >
+					
+					//collide bullet
+					hit_b = y_entity_p.colide.call(this,"bullet");
+
+					if(hit_b && hit_b.shooter_type =="enemy")
+					{
+						//reduce hp
+						this.hp-= hit_b.dmg;
+						// bullet from world
+						yremove(this,hit_b);		
+					}
+					
+				}//end collide
+				</code></pre>
+				<p>
+				almost the same as enemys method but here we also want to chack if <br>
+				the enemy collides with the player. if it dose reduce player hp and remove enemy.
+				</p>
+				
+				<pre><code class="js">
+				player_p.collide = function()
+				{
+					//collide enemy
+					hit_e = y_entity_p.colide.call(this,"enemy");
+
+					
+					//collide bullet
+					hit_b = y_entity_p.colide.call(this,"bullet");
+
+					if(hit_b && hit_b.shooter_type =="enemy")
+					{
+						//reduce hp
+						this.hp-= hit_b.dmg;
+						// bullet from world
+						yremove(this,hit_b);		
+					}
+					<span class=" palette-alizarin" >
+					if(hit_e)
+					{
+						//reduce hp
+						this.hp--;
+						//remove enemy world
+						yremove(this,hit_e);
+					}
+					<span>
+				}//end collide
+				</code></pre>
+				<p>
+				now we will handle what happens if hp is equal or below 0.
+				</p>
+				
+				<pre><code class="js">
+				player_p.check_hp = function()
+				{
+					//if hp is less or equal to 0 remove entity
+					if(this.hp <= 0)
+					{
+						yremove(this,this);
+					}
+					
+				}//end check_hp
+				</code></pre>
+				<p>
+				for now we will just remove the player.<br>
+				for the enemy will will just call players method to do the same.
+				</p>
+				<pre><code class="js">
+				enemy_p.check_hp = function()
+				{
+					//reusing player class code
+					player_p.check_hp.call(this); 
+				}//end check_hp 
+				</code></pre>
+				<p>
+				enemy also has an hp att so this will work here the same.<br>
+				dont forget to add the methods to update.<br>
+				
+				in the next tut we will create a simple game manger class that will add enemies,<br>
+				change score,and handle game over.
+				</p>
+				</div><!--end ypart2-->
+			<div class="ypart3"></div><!--end ypart3-->
+			<div class="ypart4"></div><!--end ypart4-->
+		</div>
+	
+    </div>
+    <!-- /.container -->
+	
+    <!-- script higlighter -->
+	
+
+    <!-- jQuery (necessary for Flat UI's JavaScript plugins) -->
+    <script src="js/vendor/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/vendor/video.js"></script>
+    <script src="js/flat-ui.min.js"></script>
+	<script>
+	///scroll to div when link is clicked
+	$( document ).ready(function() {
+	    $("yscroll").on('click', function(e) {
+
+			// prevent default anchor click behavior
+		   e.preventDefault();
+
+		   // animate
+		   $('html, body').animate({
+			   scrollTop: $(this.hash).offset().top
+			 }, 300, function(){
+	   
+			   // when done, add hash to url
+			   // (default click behaviour)
+			   window.location.hash = this.hash;
+			 });
+
+		});
+	});
+	</script>
+
+  </body>
+</html>

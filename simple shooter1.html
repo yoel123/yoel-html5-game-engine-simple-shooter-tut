@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>tutorial simple shooter game 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Loading Bootstrap -->
+    <link href="css/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Loading Flat UI -->
+    <link href="css/flat-ui.min.css" rel="stylesheet">
+
+    <link rel="shortcut icon" href="img/favicon.ico">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/vendor/html5shiv.js"></script>
+      <script src="js/vendor/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+        <h1>yoel html5 2d game engine programming tut a simple shooter game</h1>
+		<h2>part1 movement and shooting</h2>
+		<hr>
+		<div class="row">
+			<div class="tile  palette palette-peter-river">
+				<p>
+				in this tutorial i will show how to create a simple shooter game. <br>
+				this tutorial will cover moment(using entity parent class method),bounderis (where the player cant move),<br>
+				shooting(creating an entity after a kyboard click with timer),changing width and hight.<br>
+				if you dont know how to use my engine please go to the beginner tutorials.
+				its in my git repo at:
+			    </p>
+			</div>
+			<div class="ypart1">
+				<p>
+				</p>
+				
+				<p>
+				the finished project is in file finished project.
+				</p>
+				
+				<p>
+				</p>
+				<p>
+					first we will will create four class entitys<br>
+					player,bullet,enemy(used in a later tut),game manger(used in a later tut).<br>
+					if you dont know how to create a class please chack previous tutorials.<br>
+				    this is player class at the start:
+					
+					
+				</p>
+				<pre><code class="js">
+			     ////////  player////////
+var player = function(x,y,z,speed,mesh)
+{ 
+ this.did_init = false;
+ this.type = 'player'; 
+ 
+ y_entity.call(this,x,y,z,speed,mesh); 
+
+} 
+ 
+ player.prototype= new y_entity(); 
+ 
+ var player_p = player.prototype; 
+ 
+ player_p.init = function()
+{
+
+  if(!this.did_init)
+  {
+	this.did_init = true;
+
+	return;
+  }//if did init escape 
+
+}//end init 
+
+ player_p.update = function()
+{
+	this.init();
+	
+	 y_entity_p.update.call(this); 
+
+}//end update 
+
+
+
+
+ //////// end player////////
+
+				</code></pre>
+			</div><!--end ypart1-->
+			<div class="ypart2">
+				<p>
+				to use my premade kyabord control method you simply add an attribute<br>
+				to the class constructor:
+				</p>
+			
+				<pre><code class="js">
+				////////  player////////
+				var player = function(x,y,z,speed,mesh)
+				{ 
+					 this.did_init = false;
+					 this.type = 'player'; 
+
+					 y_entity.call(this,x,y,z,speed,mesh); 	
+					<span class=" palette-alizarin" >					
+					this.is_key_control = true;
+					</span >
+							
+					//player bullet damage
+					 this.dmg = 1;
+					 
+					 //delay between shots timer
+					 this.delay_timer =  new y_timer(0.5);
+
+				} 
+					
+					
+					
+					
+				</code></pre>
+				<p>
+				after making is_key_control equal true, the entity will move by speed,<br>
+				when the player clicks the arrow keys and:w,a,s,d keys.<br>
+				
+				now we will limit the players movement,with a new method called restrict_movement.<br>
+				we want that the blayer wont be able to move beyond the game screen.
+				</p>
+	
+				<pre><code class="js">
+				 player_p.restrict_movement = function()
+				{
+					if(this.x<0){this.x=0;}
+					if(this.x>250){this.x=250;}
+					if(this.y<0){this.y=0;}
+					if(this.y>430){this.y=430;}
+				}//end move
+				</code></pre>
+				
+				<p>
+				if x is less then 0 force the entitys x to be 0,the player cant move beyond thet invisble wall<br>
+				the other lines are the same if x is bigger then 255 make x 255,x cant go beyond it.same for the y axis<br>
+				all that is left is to add it to the update method so it will be checked every update.
+				<br>
+				before we can create the shoot method we will code the bullet class<br>
+				first thing we will do is to make it smaller then player and give it a speed of 5:
+				</p>
+				
+	
+				<pre><code class="js">
+				 ////////  bullet////////
+				var bullet = function(x,y,z,dmg,shooter_type)
+				{ 
+					 this.did_init = false;
+					 this.type = 'bullet'; 
+					//make speed =5
+					 y_entity.call(this,x,y,z,<span class=" palette-alizarin" >5</span >); 
+					 
+					<span class=" palette-alizarin" >
+					 //collision box
+					 this.hitbox_width=20;
+					 this.hitbox_height=20;
+					 //bullet width and hight
+					 this.width = 20;
+					 this.height =20;
+					 yw_h(this,this.width,this.height);
+					</span>
+
+				} 
+				</code></pre>
+				
+				
+				<p>
+				you can also change speed with the attribute this.speed, i passed speed with the parent class(entity) constructor:<br>
+				y_entity.call(this,x,y,z,speed); the last argument is speed.<br>
+				we changed the hitbox width and height for collision detection(the size of the collision box).<br>
+				then we changed the  width and height attributes also.<br> 
+				and then we used one of my engines function shortcut:yw_h()<br>
+				we takes 3 arguments the entity you want to effect (in this case its this),<br>
+				and  the  width and height you want to change it to.<br>
+				yw_h(entity,width,height);<br>
+				
+				now we will create the bullet movement.by adding a move method(dont forget to add it to update):
+				</p>
+						
+				<pre><code class="js">
+				bullet_p.move = function()
+				{
+			
+				}//end move
+				</code></pre>
+				<p>
+				we will also create a direction attribute called dir.<br>
+				we will add it to the contractor. by default the dir will be up,<br>
+				because the player shoots up at the enemies coming at him, the enemies will shot down.<br>
+				the dir att will help the bullet deside to what dir to move up or down.
+				
+				</p>
+				
+				<pre><code class="js">
+				 ////////  bullet////////
+				var bullet = function(x,y,z,dmg,shooter_type)
+				{ 
+					 this.did_init = false;
+					 this.type = 'bullet'; 
+					 //make speed =5
+					 y_entity.call(this,x,y,z,<span class=" palette-alizarin" >5</span >); 
+					 //bullet damage(how much damage it dose when it hits)
+					 this.dmg = dmg;
+<span class=" palette-alizarin" >					
+					//bullet movement direction
+					 this.dir = "up";
+					</span>
+					 //collision box
+					 this.hitbox_width=20;
+					 this.hitbox_height=20;
+					 //bullet width and hight
+					 this.width = 20;
+					 this.height =20;
+					 yw_h(this,this.width,this.height);
+					
+
+				} 
+				</code></pre>
+				<p>
+				if bullet dir = down move by speed(down y axis), if its up move -speed on y(up):
+				</p>
+				
+				<pre><code class="js">
+				bullet_p.move = function()
+				{
+					//if dir = down move by speed on y axis
+					if(this.dir =="down")
+					{
+						y_entity_p.move_by.call(this,0,this.speed);
+					}
+					//if dir = up move by -speed on y axis
+					if(this.dir =="up")
+					{
+						y_entity_p.move_by.call(this,0,-this.speed);
+					}
+				
+				}//end move
+				</code></pre>
+				<p>
+				if the bullet pass the game screen we want to remove it:
+				</p>
+				<pre><code class="js">
+				bullet_p.move = function()
+				{
+					//if dir = down move by speed on y axis
+					if(this.dir =="down")
+					{
+						y_entity_p.move_by.call(this,0,this.speed);
+					}
+					//if dir = up move by -speed on y axis
+					if(this.dir =="up")
+					{
+						y_entity_p.move_by.call(this,0,-this.speed);
+					}
+					<span class=" palette-alizarin" >
+					//if its outside of screen remove it
+					if(this.y<0 || this.y>480)
+					{
+						yremove(this,this);
+					}
+					</span >
+				}//end move
+				</code></pre>
+				<p>
+				yremove is another shortcun function used to remove entitys from world.<br>
+				yremove(entity_remover,entity_to_remove);<br>
+				first argument is the entity that requests the remove,the second one is the<br>
+				entity that will be removed.it will be removed from the requester world.
+				in this case the bullet removes its self, so its (this,this).<br>
+				
+				now lets make the player shot bullets.<br>
+				first we will add a shoot method,and chack if player clicked space btn.<br>
+				also dont forget to add an instance of shot in update.<br>
+				
+				</p>
+				
+				<pre><code class="js">
+				player_p.shoot = function()
+				{
+					
+					//if space is pressed
+					if(y_input2_p.key_down[y_key.SPACE])
+					{
+			
+					}
+				}//end shoot
+				</code></pre>
+				
+				<p>
+				now we will create the bullet and add it to world after space is clicked:
+				</p>
+				
+				<pre><code class="js">
+				player_p.shoot = function()
+				{
+					
+					//if space is pressed
+					if(y_input2_p.key_down[y_key.SPACE])
+					{
+						//create bullet
+						var b = new bullet(this.x+10,this.y-10,1,this.dmg,this.type);
+						//add to world
+						yoel_engine_p.current_world.add(b);
+		
+					}
+				}//end shoot
+				</code></pre>
+				<p>
+				this.dmg is an attribute we will add to player constructor.
+				</p>
+				
+				<pre><code class="js">
+				 ////////  player////////
+				var player = function(x,y,z,speed,mesh)
+				{ 
+					 this.did_init = false;
+					 this.type = 'player'; 
+
+					 y_entity.call(this,x,y,z,speed,mesh); 
+					 this.is_key_control = true;
+					  <span class=" palette-alizarin" >
+					 //player bullet damage
+					 this.dmg = 1;
+					</span >
+	
+				} 
+				</code></pre>
+				<p>
+				i add 10 to the x and y of the bullet so it will spawn a little to the middle.
+				and in front of the entity 
+				</p>
+				<pre><code class="js">
+				var b = new bullet(<span class=" palette-alizarin" >this.x+10,this.y+10</span >,1,this.dmg,this.type);
+				</code></pre>
+				<p>
+				now when space is pressed a stream of bullets i created.we dont want that.<br>
+				we want the player to shot with a delay, one bullet at a time.<br>
+				lets say 1 bullet every half a second.<br>
+				for that purpose i will create a timer
+				</p>
+				
+				<pre><code class="js">
+				 ////////  player////////
+				var player = function(x,y,z,speed,mesh)
+				{ 
+					 this.did_init = false;
+					 this.type = 'player'; 
+
+					 y_entity.call(this,x,y,z,speed,mesh); 
+					 this.is_key_control = true;
+					 //player bullet damage
+					 this.dmg = 1;
+					 <span class=" palette-alizarin" >
+					 //delay between shots timer
+					 this.delay_timer =  new y_timer(0.5);
+					 </span >
+
+				} 
+				</code></pre>
+				
+				<p>
+				lets use it:
+				</p>
+				<pre><code class="js">
+				player_p.shoot = function()
+				{
+					<span class=" palette-alizarin" >
+					//update delay timer
+					this.delay_timer.update();
+					</span >
+					
+					//if space is pressed and delay timer finished
+					if(y_input2_p.key_down[y_key.SPACE] <span class=" palette-alizarin" >&& this.delay_timer.finished</span >)
+					{
+						//create bullet with dir update
+						var b = new bullet(this.x+10,this.y+10,1,this.dmg,this.type);
+						//add to world
+						yoel_engine_p.current_world.add(b);
+						<span class=" palette-alizarin" >
+						//reset timer
+						this.delay_timer.reset();
+						</span >
+					}
+				}//end shoot
+				</code></pre>
+				<p>
+				for more about timers theirs my beginner tutorials in "yoel-html5-game-engine-tutorials".
+				</p>
+			
+				<p>
+				thats it for this tut
+				</p>
+			</div><!--end ypart2-->
+			<div class="ypart3"></div><!--end ypart3-->
+			<div class="ypart4"></div><!--end ypart4-->
+		</div>
+	
+    </div>
+    <!-- /.container -->
+	
+    <!-- script higlighter -->
+	
+
+    <!-- jQuery (necessary for Flat UI's JavaScript plugins) -->
+    <script src="js/vendor/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/vendor/video.js"></script>
+    <script src="js/flat-ui.min.js"></script>
+	<script>
+	///scroll to div when link is clicked
+	$( document ).ready(function() {
+	    $("yscroll").on('click', function(e) {
+
+			// prevent default anchor click behavior
+		   e.preventDefault();
+
+		   // animate
+		   $('html, body').animate({
+			   scrollTop: $(this.hash).offset().top
+			 }, 300, function(){
+	   
+			   // when done, add hash to url
+			   // (default click behaviour)
+			   window.location.hash = this.hash;
+			 });
+
+		});
+	});
+	</script>
+
+  </body>
+</html>

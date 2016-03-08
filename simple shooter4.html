@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>tutorial simple shooter game 4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Loading Bootstrap -->
+    <link href="css/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Loading Flat UI -->
+    <link href="css/flat-ui.min.css" rel="stylesheet">
+
+    <link rel="shortcut icon" href="img/favicon.ico">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="js/vendor/html5shiv.js"></script>
+      <script src="js/vendor/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+        <h1>yoel html5 2d game engine programming tut a simple shooter game</h1>
+		<h2>part4 game manager</h2>
+		<hr>
+		<div class="row">
+			<div class="tile  palette palette-peter-river">
+				<p>
+				in this tutorial we will use the game manager class, to handle<br>
+				adding enemies and score, i will not implement a level system,<br>
+				instead when the score will be above certain number more enemies will spawn
+				</p>
+			</div>
+			<div class="ypart1">
+				<p>
+				</p>
+				
+				<p>
+				the finished project is in file finished project called part 4.html.
+				</p>
+				
+				<p>
+				</p>
+				<p>
+					first thing we will add attributes to our game manager class.<br>
+					we will add score and create timers
+				</p>
+				<pre><code class="css">
+				 ////////  game_manger////////
+				var game_manger = function(x,y,z,speed,mesh)
+				{ 
+					 this.did_init = false;
+					 this.type = 'game_manger'; 
+
+					 y_entity.call(this,x,y,z,speed,mesh); 
+					 <span class=" palette-alizarin" >
+					 this.score=0;
+					 //spawn timers
+					 this.spawn_timer =  new y_timer(5);
+					 this.spawn_timer2 =  new y_timer(8);
+					 this.spawn_timer3 =  new y_timer(10);
+</span >			</span >
+				}  
+
+				</code></pre>
+			</div><!--end ypart1-->
+			<div class="ypart2">
+				<p>
+				then we will add score text and hide the dom element of the entity<br>
+				(every entity has a default dom element,the blue box div).
+				</p>
+			
+				<pre><code class="js">
+				 game_manger_p.init = function()
+				{
+
+					if(!this.did_init)
+					{
+						
+						<span class=" palette-alizarin" >
+						//show score using jqury
+						var id ="#"+yoel_engine_p.current_world.game_wraper;//game container id
+						//create score div
+						$(id).append("&lt;div class='yscore'&gt;score:0&lt;/div&gt;");
+						//hide entity dom element
+						$("#"+this.id).hide();
+						</span>
+						this.did_init=true;
+						return;
+					}//if did init escape 
+
+				 }//end init 
+				</code></pre>
+				<p>
+				we will add game manger to main:
+				
+				</p>
+	
+				<pre><code class="js">
+				//game main
+				function main()
+				{
+					var test_world = new y_world("y_game");
+					yoel_engine_p.current_world = test_world;
+					yoel_engine_p.init();
+					
+					
+					//create example entity
+					var test_p = new player(100,400,0,3);
+					//create test minion
+					var test_m = new enemy(30,-20,0);
+					//create test warrior
+					var test_w = new enemy(80,-20,0);
+					test_w.enemy_type="warrior";
+					<span class=" palette-alizarin" >
+					//add game manger
+					var gm = new game_manger();
+					</span>
+				
+					//add it to world	
+					yoel_engine_p.current_world.add(test_p);
+					yoel_engine_p.current_world.add(test_m);
+					yoel_engine_p.current_world.add(test_w);
+					<span class=" palette-alizarin" >
+					yoel_engine_p.current_world.add(gm);
+					</span>
+
+				
+
+
+				
+				} 
+				</code></pre>
+				
+				<p>
+				we will add a new method to game_manger called spawn,<br>
+				this method will spawn enemys to the game depending on score value.<br>
+				first we will update timers and increment score(score will go up every update).
+				</p>
+				
+	
+				<pre><code class="js">
+				game_manger_p.spawn = function()
+				{
+					//update timers
+					this.spawn_timer.update();
+					this.spawn_timer2.update();
+					this.spawn_timer3.update();
+					
+					//update score
+					this.score++;
+					
+
+				}//end spawn
+
+				</code></pre>
+				
+				
+				<p>
+				if score is bigger then 0 and timer is done spawn three enemies.<br>
+				we will create a loop  that will add the minion enemy type.<br>
+				the distances between them on x axis will be 100 so we will dobble it<br>
+				with the current loop increment.
+				
+				</p>
+						
+				<pre><code class="js">
+				game_manger_p.spawn = function()
+				{
+					//update timers
+					this.spawn_timer.update();
+					this.spawn_timer2.update();
+					this.spawn_timer3.update();
+					
+					//update score
+					this.score++;
+					<span class=" palette-alizarin" >
+					//if score is bigger then num and spaun timer is finished do somthing
+					if(this.score>0 && this.spawn_timer.finished)
+					{
+						//add three minions
+						for(var i=0; i<=2; i++)
+						{
+							//create minnion
+							var m = new enemy(100*i,-20,0);
+							 //add it to world	
+							yoel_engine_p.current_world.add(m);
+						}
+						//reset timer
+						this.spawn_timer.reset();
+					}
+					</span>
+	
+				}//end spawn
+				</code></pre>
+				<p>
+				we will just copy and paste that two more times and change the if<br>
+				score is bigger then to a different value.
+				we will also spawn warrior enemy types.
+				</p>
+				
+				<pre><code class="js">
+				game_manger_p.spawn = function()
+				{
+					//update timers
+					this.spawn_timer.update();
+					this.spawn_timer2.update();
+					this.spawn_timer3.update();
+					
+					//update score
+					this.score++;
+					
+					//if score is bigger then num and spaun timer is finished do somthing
+					if(this.score>0 && this.spawn_timer.finished)
+					{
+						//add three minions
+						for(var i=0; i<=2; i++)
+						{
+							//create minnion
+							var m = new enemy(100*i,-20,0);
+							 //add it to world	
+							yoel_engine_p.current_world.add(m);
+						}
+						//reset timer
+						this.spawn_timer.reset();
+					}
+					<span class=" palette-alizarin" >
+					if(this.score>500 && this.spawn_timer2.finished)
+					{
+						//create worrior
+						var w = new enemy(80,-20,0);
+						w.enemy_type="warrior";
+					
+						//add it to world	
+						yoel_engine_p.current_world.add(w);
+						//reset timer
+						this.spawn_timer2.reset();
+					}
+					if(this.score>1000 && this.spawn_timer3.finished)
+					{
+						//add two warriors
+						for(var i=0; i<=1; i++)
+						{
+							//create warriors
+							var w2 = new enemy(120*i,-40,0);
+							w2.enemy_type="warrior";
+							 //add it to world	
+							yoel_engine_p.current_world.add(w2);
+						}
+						//reset timer
+						this.spawn_timer3.reset();
+					}
+					</span>
+				}//end spawn
+				</code></pre>
+				<p>
+				finely we will update score value on the game screen:
+				</p>
+				
+				<pre><code class="js">
+				game_manger_p.hud = function()
+				{
+
+					//show score
+					$(".yscore").text("score: "+this.score);//add text to yscore
+					
+				}//end hud
+				</code></pre>
+				<p>
+				every update we change the score text to the current score value.
+				</p>
+			
+				<p>
+				thats it for this tut,in the next one we will create a start and finish screen.
+				</p>
+				</div><!--end ypart2-->
+			<div class="ypart3"></div><!--end ypart3-->
+			<div class="ypart4"></div><!--end ypart4-->
+		</div>
+	
+    </div>
+    <!-- /.container -->
+	
+    <!-- script higlighter -->
+	
+
+    <!-- jQuery (necessary for Flat UI's JavaScript plugins) -->
+    <script src="js/vendor/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/vendor/video.js"></script>
+    <script src="js/flat-ui.min.js"></script>
+	<script>
+	///scroll to div when link is clicked
+	$( document ).ready(function() {
+	    $("yscroll").on('click', function(e) {
+
+			// prevent default anchor click behavior
+		   e.preventDefault();
+
+		   // animate
+		   $('html, body').animate({
+			   scrollTop: $(this.hash).offset().top
+			 }, 300, function(){
+	   
+			   // when done, add hash to url
+			   // (default click behaviour)
+			   window.location.hash = this.hash;
+			 });
+
+		});
+	});
+	</script>
+
+  </body>
+</html>
